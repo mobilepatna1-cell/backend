@@ -19,7 +19,7 @@ const app = express();
 
 // Railway provides a dynamic port via process.env.PORT. 
 // 8080 is used as a fallback for local development.
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 // Connect to MongoDB
 connectDB();
