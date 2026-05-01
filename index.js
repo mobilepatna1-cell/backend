@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./src/config/DB.js";
+import dns from "dns";
 
 import authRoutes from "./src/routes/auth.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
@@ -12,28 +13,34 @@ import profileRoutes from "./src/routes/profile.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import cartRoutes from "./src/routes/cart.routes.js";
 
-// Load environment variables
+// ✅ FIX DNS (remove invalid entry)
+dns.setServers(["8.8.8.8"]);
+
 dotenv.config();
 
 const app = express();
 
-// Railway provides a dynamic port via process.env.PORT. 
-// 8080 is used as a fallback for local development.
-const PORT = process.env.PORT || 8081;
+// ✅ FIX PORT (fallback added)
+const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
+// DB connection
 connectDB();
 
-// Middleware
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint for Railway monitoring
-app.get("/health", (req, res) => {
-    return res.status(200).json({ status: "ok" });
+// ✅ ROOT ROUTE (IMPORTANT)
+app.get("/", (req, res) => {
+	return res.send("Backend is live 🚀");
 });
 
-// API Routes
+// Health check
+app.get("/health", (req, res) => {
+	return res.status(200).json({ status: "ok" });
+});
+
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
@@ -45,18 +52,18 @@ app.use("/api/cart-wishlist", cartRoutes);
 
 // 404 handler
 app.use((req, res) => {
-    return res.status(404).json({ message: "Route not found" });
+	return res.status(404).json({ message: "Route not found" });
 });
 
 // Error handler
 app.use((err, req, res, _next) => {
-    const statusCode = err?.statusCode || 500;
-    return res
-        .status(statusCode)
-        .json({ message: err?.message || "Server error" });
+	const statusCode = err?.statusCode || 500;
+	return res
+		.status(statusCode)
+		.json({ message: err?.message || "Server error" });
 });
 
-// CRITICAL FIX: Bind to '0.0.0.0' to allow the Railway proxy to reach the container.
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port: ${PORT}`);
+// ✅ FIX LISTEN (important for Render/Railway)
+app.listen(PORT, "0.0.0.0", () => {
+	console.log(`Server is running on port ${PORT}`);
 });
